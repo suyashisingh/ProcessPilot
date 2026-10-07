@@ -1,0 +1,67 @@
+# Register these HTTP skills in Watsonx Orchestrate. Set the shared token as a
+# secret connection value and pass it in X-Orchestrate-Token.
+openapi: 3.0.3
+info:
+  title: ProcessPilot Orchestrate Skills
+  version: 1.0.0
+servers:
+  - url: ${PROCESSPILOT_API_URL}
+paths:
+  /v1/orchestrate/skills/submit-request:
+    post:
+      operationId: submitServiceRequest
+      summary: Start approval workflow for an HR or IT request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ServiceRequestInput'}
+      responses: {'200': {description: Request submitted}}
+  /v1/orchestrate/skills/record-approval:
+    post:
+      operationId: recordApproval
+      summary: Record manager approval or rejection
+      parameters:
+        - {name: request_id, in: query, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ApprovalInput'}
+      responses: {'200': {description: Approval recorded}}
+  /v1/orchestrate/skills/fulfil-request:
+    post:
+      operationId: fulfilServiceRequest
+      summary: Complete an approved request
+      parameters:
+        - {name: request_id, in: query, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/FulfilmentInput'}
+      responses: {'200': {description: Request fulfilled}}
+components:
+  schemas:
+    ServiceRequestInput:
+      type: object
+      required: [category, request_type, requester_email, summary]
+      properties:
+        category: {type: string, enum: [hr, it]}
+        request_type: {type: string}
+        requester_email: {type: string, format: email}
+        summary: {type: string}
+        details: {type: object}
+    ApprovalInput:
+      type: object
+      required: [approver, approved]
+      properties:
+        approver: {type: string, format: email}
+        approved: {type: boolean}
+        note: {type: string}
+    FulfilmentInput:
+      type: object
+      required: [fulfiller]
+      properties:
+        fulfiller: {type: string}
+        note: {type: string}

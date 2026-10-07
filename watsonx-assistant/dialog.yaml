@@ -1,0 +1,53 @@
+# Conversation blueprint for Watsonx Assistant. Map these intents/actions in the UI
+# or translate to the tenant's assistant export format.
+assistant:
+  name: ProcessPilot
+  description: HR and IT service request intake with grounded agent assistance.
+  fallback:
+    condition: "anything_else"
+    response: "I can help with HR and IT service requests. Are you requesting access, resetting a password, taking leave, or onboarding someone?"
+intents:
+  - name: it.access_request
+    examples:
+      - I need access to Salesforce
+      - Give me permission to use the reporting app
+      - Request application access
+  - name: it.password_reset
+    examples:
+      - Reset my password
+      - I am locked out of my account
+  - name: hr.leave_request
+    examples:
+      - I want to request annual leave
+      - Book vacation days
+  - name: hr.onboarding
+    examples:
+      - Onboard a new employee
+      - My new starter needs a laptop
+entities:
+  - name: application_name
+    description: Application or system requested for access.
+  - name: leave_dates
+    description: Requested leave date range.
+actions:
+  - name: create_service_request
+    input_fields: [category, request_type, requester_email, summary, details]
+    webhook:
+      method: POST
+      url: "${PROCESSPILOT_API_URL}/v1/orchestrate/skills/submit-request"
+  - name: retrieve_knowledge
+    webhook:
+      method: POST
+      url: "${PROCESSPILOT_API_URL}/v1/conversations/message"
+dialog_routes:
+  - intent: it.access_request
+    action: retrieve_knowledge
+    next: create_service_request
+  - intent: it.password_reset
+    action: retrieve_knowledge
+  - intent: hr.leave_request
+    action: retrieve_knowledge
+    next: create_service_request
+  - intent: hr.onboarding
+    action: retrieve_knowledge
+    next: create_service_request
